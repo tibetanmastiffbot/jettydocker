@@ -2,32 +2,66 @@ package com.me;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.util.security.Constraint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.jackson.User;
+import com.me.remoteproxy.ProxyResourceClient;
+import com.me.remoteproxy.ResourceIF;
 
 public class JettyMain extends AbstractHandler {
 
 	public static void main(String[] args) throws Exception {
+		Server server = new Server(9080);
+		LoginService loginService = new HashLoginService("MyRealm", "src/test/resources/realm.properties");
+		server.addBean(loginService);
+		ConstraintSecurityHandler security = new ConstraintSecurityHandler();
+		server.setHandler(security);
+		Constraint constraint = new Constraint();
+		constraint.setName("auth");
+		constraint.setAuthenticate(true);
+		constraint.setRoles(new String[] { "user", "admin" });
+
+		ConstraintMapping mapping = new ConstraintMapping();
+		mapping.setPathSpec("/*");
+		mapping.setConstraint(constraint);
+
+		security.setConstraintMappings(Collections.singletonList(mapping));
+		security.setAuthenticator(new BasicAuthenticator());
+		security.setLoginService(loginService);
+
+		security.setHandler(new JettyMain());
+
+		server.start();
+
+		Thread.sleep(1000);
+		ResourceIF proxy = new ProxyResourceClient();
+		System.out.println(proxy.sayHello());
+
+		server.join();
+	}
+
+	private static void doJackson() throws Exception {
 		ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
 		User user = mapper.readValue(new File("test/user.json"), User.class);
 		System.out.println(user);
 		user.getName().setFirst("Mad");
 		mapper.writeValue(new File("test/user-modified.log"), user);
-
-		Server server = new Server(9080);
-		server.setHandler(new JettyMain());
-
-		server.start();
-		server.join();
+		System.out.println(mapper.writeValueAsString(user));
 	}
 
 	@Override
