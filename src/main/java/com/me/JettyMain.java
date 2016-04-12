@@ -22,6 +22,7 @@ import org.eclipse.jetty.util.security.Constraint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.jackson.User;
+import com.me.mockito.HelloServlet;
 import com.me.mockito.LoginServlet;
 import com.me.remoteproxy.ProxyResourceClient;
 import com.me.remoteproxy.ResourceIF;
@@ -53,6 +54,7 @@ public class JettyMain extends AbstractHandler {
 
 		// security.setHandler(new JettyMain());
 		context.addServlet(new ServletHolder(LoginServlet.class), "/l");
+		context.addServlet(new ServletHolder(HelloServlet.class), "/h");
 
 		server.start();
 

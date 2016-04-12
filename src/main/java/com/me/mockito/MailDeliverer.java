@@ -2,10 +2,19 @@ package com.me.mockito;
 
 public class MailDeliverer {
 
+	public MailDeliverer() {
+		super();
+		// to demonstrate the mock injection actually worked.
+		externalMailSystem = null;
+		timestamper = null;
+		System.out.println(this.externalMailSystem);
+	}
+
 	private ExternalMailSystem externalMailSystem;
 	private Timestamper timestamper;
 
 	public void deliver(String address, String body) {
+		System.out.println(this.externalMailSystem + " null ? " + Boolean.toString((this.externalMailSystem == null)));
 		Email email = new Email();
 		email.setBody(body);
 		applyUserAndDomainUsingProvidedAddress(address, email);
