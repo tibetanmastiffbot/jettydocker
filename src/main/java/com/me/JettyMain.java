@@ -16,10 +16,13 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.jackson.User;
+import com.me.mockito.LoginServlet;
 import com.me.remoteproxy.ProxyResourceClient;
 import com.me.remoteproxy.ResourceIF;
 
@@ -29,8 +32,12 @@ public class JettyMain extends AbstractHandler {
 		Server server = new Server(9080);
 		LoginService loginService = new HashLoginService("MyRealm", "src/test/resources/realm.properties");
 		server.addBean(loginService);
+
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		ConstraintSecurityHandler security = new ConstraintSecurityHandler();
-		server.setHandler(security);
+		context.setSecurityHandler(security);
+		server.setHandler(context);
+
 		Constraint constraint = new Constraint();
 		constraint.setName("auth");
 		constraint.setAuthenticate(true);
@@ -44,7 +51,8 @@ public class JettyMain extends AbstractHandler {
 		security.setAuthenticator(new BasicAuthenticator());
 		security.setLoginService(loginService);
 
-		security.setHandler(new JettyMain());
+		// security.setHandler(new JettyMain());
+		context.addServlet(new ServletHolder(LoginServlet.class), "/l");
 
 		server.start();
 
