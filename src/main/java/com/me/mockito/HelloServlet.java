@@ -26,6 +26,8 @@ public class HelloServlet extends HttpServlet {
 		response.setContentType("text/html");
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.getWriter().println("<h1>" + greeting + "</h1>");
+		response.getWriter().println(String.format("%s://%s:%d%s?%s", request.getScheme(), request.getServerName(),
+				request.getServerPort(), request.getRequestURI(), request.getQueryString()));
 		response.getWriter().println("session=" + request.getSession(true).getId());
 	}
 }
